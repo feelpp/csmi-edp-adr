@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<title>Assemblage de la matrice d&#8217;élément fini</title>
+<title>TP Equation d&#8217;Advection Diffusion Reaction</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,201 +438,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>Assemblage de la matrice d&#8217;élément fini</h1>
+<h1>TP Equation d&#8217;Advection Diffusion Reaction</h1>
 </div>
 <div id="content">
-<div id="preamble">
-<div class="sectionbody">
 <div class="paragraph">
-<p>Ce TP est à effectuer en python.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_lecture_dun_fichier_gmsh">Lecture d&#8217;un fichier Gmsh</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Le fichier GmshRead.py contient une classe mesh dont les objets sont les données associées à un maillage triangulaire \(\mathrm{P} 1\) en \(2 \mathrm{D}\) contruit à partir d&#8217;un fichier gmsh (v4).</p>
-</div>
-<div class="paragraph">
-<p>Un élément de la classe maillage contient:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>Nnodes</code>: nombre de noeuds du maillage</p>
-</li>
-<li>
-<p><code>Nodes</code>: tableau de taille (Nnodes, 2 ) contenant les coordonnées des noeuds du maillage</p>
-</li>
-<li>
-<p><code>label</code>: tableau de taille Nnodes contenant des informations sur la location du noeud (noeud du bords / noeuds interne)</p>
-</li>
-<li>
-<p><code>Nel</code>: nombre d&#8217;éléments du mailage</p>
-</li>
-<li>
-<p><code>connect</code> : tableau de connectivité de taille <code>(Nel, 3 )</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Pour les remplir, il parcoure un fichier .msh ligne à ligne (<code>line = f.readline()</code>) et récupère les données en parsant chaque ligne ( <code>line.split()</code> ).</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Remplir le tableau <code>connect</code>.</p>
-</li>
-<li>
-<p>Ajouter un tableau diam de taille <code>Nel</code> qui contient le diamètre de chacun des éléments, ainsi que le paramètre h du maillage.</p>
-</li>
-<li>
-<p>Ajouter un tableau area de taille <code>Nel</code> qui contient l&#8217;aire de chacun des éléments.</p>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">TIP</dt>
-<dd>
-<p>l&#8217;aire d&#8217;un parallélogramme est égale au produit vectoriel/ déterminant des deux vecteurs qui l&#8217;engendrent</p>
-</dd>
-</dl>
-</div>
-</li>
-<li>
-<p>Tester votre code avec le maillage d&#8217;un rectangle triangulé régulièrement.</p>
-</li>
-<li>
-<p>Vérifier que l&#8217;aire du rectangle est bien la somme des aires des triangles.</p>
-</li>
-<li>
-<p>Vérifier la même chose sur une géométrie différente du rectangle.</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_base_de_lélément_fini_p1">Base de l&#8217;élément fini P1.</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Considérons le triangle de sommets \(a_{1}=(0,0), a_{2}=(1,0)\) et \(a_{3}=(0,1),\) comme éléments de références.
-La base d&#8217;élément fini associé à chacun de ces points est donnée par:</p>
-</div>
-<div class="stemblock">
-<div class="content">
-\[\psi_{1}(x, y)=1-(x+y), \quad \psi_{2}(x, y)=x, \quad \psi_{3}(x, y)=y\]
-</div>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Créer une fonction <code>coord(1d)</code> qui prend en entrée un tableau de taille 3 contenant les coordonnées barycentriques \(\left(\lambda_{1}, \lambda_{2}, \lambda_{3}\right)\) d&#8217;un point et renvoie le tableau de taille 2 contenant les coordonnées de ce point:</p>
-<div class="stemblock">
-<div class="content">
-\[(x, y)=\lambda_{1} a_{1}+\lambda_{2} a_{2}+\lambda_{3} a_{3}\]
-</div>
-</div>
-</li>
-<li>
-<p>Nous souhaitons créer une fonction <code>base_psiref()`</code> qui permettra d&#8217;effectuer les quadratures
-sur l&#8217;élément de référence. Cette fonction doit renvoyer les quatre tableaux suivants:</p>
-<div class="ulist">
-<ul>
-<li>
-<p><code>pts</code>: tableau de taille <code>(7, 3)</code> contenant les coordonnées barycentriques des points de quadrature,</p>
-</li>
-<li>
-<p><code>wght</code>: tableau de taille <code>7</code> contenant les poids de quadrature associés,</p>
-</li>
-<li>
-<p><code>psi</code>: tableau de taille <code>(3,7)`</code> contenant la valeur des 3 fonctions de bases aux 7 points de quadratures.</p>
-</li>
-<li>
-<p><code>derpsi</code>: tableau de taille <code>(3,7,2)</code> contenant la valeur des gradients des 3 fonctions de bases aux 7 points de quadratures.</p>
-</li>
-</ul>
-</div>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_assemblage_de_la_matrice">Assemblage de la matrice.</h2>
-<div class="sectionbody">
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Créer une <code>class poisson</code> qui contient un prend à la contruction en entrée un maillage <code>Mh</code> et une fonction, <code>f</code>, correspondant au second membre de l’équation. Un élément de la classe contiendra de plus <code>Ndof</code>, le nombre de degrés de liberté (correspondant au nombre de noeuds du maillage), une matrice de taille <code>(Ndof,Ndof)</code>, stockée intialement au format <a href="https://scipy-lectures.org/advanced/scipy_sparse/dok_matrix.html">dok</a>, un tableau <code>rhs</code> de taille <code>Ndof</code>, contenant le second membre du système linéaire et enfin un tableau u de taille <code>Ndof</code> contenant la solution approchée.</p>
-</li>
-<li>
-<p>Ajouter une fonction <code>assemble_matrix(self)</code> qui assemble la matrice. On pourra compléter le code suivant :</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-python" data-lang="python">    pts, wght, psi, derpsi = basis_psiref()
-    for nel in range( Mh.Nel):
-        A = ... # noeuds du triangle
-        B = ....
-        C = ....
-        comT = ... #det(T_K) * (nabla (T_K))^{-1} = com(T_{K})^{-1}
-        detT = .... #det(T_K)
-        for i, wgh in enumerate(wght):
-            for ni in range( 3):
-                inode = Mh.connect[nel, ni]
-                for nj in range(3):
-                    jnode = Mh.connect[nel, nj]
-                    dpsi_i = ...
-                    dpsi_j = ...
-                    self.M[inode, jnode] += ....
-                    self.M = self.M.tocsc()</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>La matrice précédente est la matrice associée au Laplacien avec condition de Neumann. Pour inclure des conditions de Dirichlet, modifier la matrice de telle sorte que <code>M[inode,inode] = tgv</code>,
-avec <code>tgv = 1.e6</code> dès que <code>inode</code> correspond à un noeud du bord.</p>
-</li>
-<li>
-<p>Créer sur le même modèle une fonction <code>rhs( self)</code> qui assemble le second membre. Pour inclure des conditions de Dirichlet, il faut aussi que <code>rhs[inode] = 0</code> dès que <code>inode</code> correspond à un noeud du bord.</p>
-</li>
-<li>
-<p>Créer une fonction <code>solve( self)</code> qui calcule la solution approchée.</p>
-</li>
-<li>
-<p>Ajouter une fonction <code>plot_sol( self)</code> qui permet d’afficher la solution approchée et ajouter un argument <code>plot</code> dans la fonction <code>solve</code>.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-python" data-lang="python">    x = Mh.Nodes[:, 0]
-    y = Mh.Nodes[:, 1]
-    fig = plt.figure()
-    ax = fig.gca(projection=’3d’)
-    surf = ax.plot_trisurf(x, y, self.ufull, linewidth=0.2,
-    antialiased=True, cmap=plt.cm.CMRmap)
-    fig.colorbar(surf, shrink=0.5, aspect=5)</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Tester votre fonction avec un maillage du disque et la fonction <code>f = 1</code>. Calculer la solution exacte et son gradient.</p>
-</li>
-<li>
-<p>Ajouter une fonction <code>compute( self)</code> qui calcule l’erreur en norme \(L^2\)
-et en norme \(H^1\) entre la solution approchée et la solution exacte (projetée sur l’espace d’élément finis P1). Vérifier l’ordre de convergence numérique.</p>
-</li>
-<li>
-<p>Implémenter le support de condition de Neumann non homogène</p>
-</li>
-<li>
-<p>Tester votre code avec conditions de Dirichlet et Neumann homogènes et non homogènes sur une géométrie non triviale de votre choix avec une solution manufacturée dans l&#8217;espace et une non-polynomiale en faisant une étude de convergence.</p>
-</li>
-</ol>
-</div>
-</div>
+<p>le sujet est tp.pdf[ici]</p>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-03-31 03:54:44 UTC
+Last updated 2021-03-31 04:07:24 UTC
 </div>
 </div>
 <script type="text/x-mathjax-config">
